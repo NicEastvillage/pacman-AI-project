@@ -21,7 +21,7 @@ def heuristic(static_info: StaticInfo, state: MyGameState) -> float:
     for x in range(state.food.width):
         for y in range(state.food.height):
             if state.food[x][y]:
-                dist = abs(state.pacman[0] - x) + abs(state.pacman[1] - y)
+                dist = static_info.floyd_warshall.dist[state.pacman[0]][state.pacman[1]][x][y]
                 if dist < closest_dist:
                     closest_dist = dist
                 if dist > furthest_dist:
@@ -55,7 +55,7 @@ class PolicyRefiner:
         while time.time() < stop_at:
             s = self.root_state
             trial = [s]
-            explorations_left = 150
+            explorations_left = max(heuristic(self.static_info, s) * 2, 25)
             while True:
                 if time.time() >= stop_at:
                     return
