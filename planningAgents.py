@@ -21,7 +21,7 @@ class PlanningAgent(game.Agent):
     def offline_planning(self):
         # Time limit: 10 minutes
 
-        stop_at = time.time() + 10.50  # TODO: Extend to 10 min
+        stop_at = time.time() + 30.50  # TODO: Extend to 10 min
         self.policy.refine(stop_at)
 
     def getAction(self, state: GameState):

@@ -55,7 +55,7 @@ class PolicyRefiner:
         while time.time() < stop_at:
             s = self.root_state
             trial = [s]
-            explorations_left = 100
+            explorations_left = 150
             while True:
                 if time.time() >= stop_at:
                     return
@@ -77,6 +77,8 @@ class PolicyRefiner:
                     tt.done = True
                     break
                 elif explorations_left <= 0:
+                    # We have explored enough. s will not be a part of our trial
+                    trial.pop()
                     break
 
                 # Explore if needed
@@ -122,7 +124,7 @@ class PolicyRefiner:
                 tt.done = done
 
             self.trials_completed += 1
-            if self.trials_completed % 500 == 0:
+            if self.trials_completed % 1000 == 0:
                 print('Trials completed:', self.trials_completed)
 
     def _update_best_action(self, tt: TTEntry):
@@ -139,11 +141,6 @@ class PolicyRefiner:
             if cost < tt.expected_cost:
                 tt.best_action = act
                 tt.expected_cost = cost
-
-    def get_value(self, state: MyGameState):
-        if tt := self.transposition_table.get(hash(state)):
-            return tt.expected_value
-        return heuristic(self.static_info, state)
 
     def get_action(self, state: MyGameState) -> Tuple[int, int]:
         tt = self.transposition_table[state]

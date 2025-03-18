@@ -59,10 +59,18 @@ class MyGameState:
         new_ghost_list[ghost_index] = Ghost(new_position, act)
         return MyGameState(self.pacman, new_ghost_list, self.food)
 
-    def generate_successors_map(self, static_info: StaticInfo, ignore_stop_act=False) -> Iterator[
+    def generate_successors_map(self, static_info: StaticInfo) -> Iterator[
         Tuple[Tuple[int, int], Iterator[Tuple['MyGameState', float]]]]:
         if self.is_loss() or self.is_win():
             return
+
+        ignore_stop_act = True
+        for ghost in self.ghosts:
+            dist = abs(ghost.position[0] - self.pacman[0]) + abs(ghost.position[1] - self.pacman[1])
+            if dist <= 2:
+                ignore_stop_act = False
+                break
+
 
         for act in static_info.get_all_legal_actions(self.pacman):
             if act == (0, 0) and ignore_stop_act:
