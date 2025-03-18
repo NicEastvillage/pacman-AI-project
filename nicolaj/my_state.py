@@ -6,6 +6,9 @@ from nicolaj.static_info import StaticInfo
 from pacman import GameState
 
 
+COST_OF_LOSING = 999999
+
+
 class Ghost:
     def __init__(self, position: Tuple[int, int], direction: Tuple[int, int]):
         self.position = position

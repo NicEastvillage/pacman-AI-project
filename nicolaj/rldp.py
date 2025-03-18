@@ -2,33 +2,10 @@ import random
 import time
 from typing import Dict, Tuple, List
 
-from nicolaj.my_state import MyGameState
+from nicolaj.heuristic import heuristic
+from nicolaj.my_state import MyGameState, COST_OF_LOSING
 from nicolaj.static_info import StaticInfo
 from pacman import GameState
-
-
-COST_OF_LOSING = 999999
-
-
-def heuristic(static_info: StaticInfo, state: MyGameState) -> float:
-    if state.is_loss():
-        return COST_OF_LOSING
-    if state.is_win():
-        return 0
-
-    furthest_dist = 0
-    closest_dist = state.food.width * state.food.height
-    for x in range(state.food.width):
-        for y in range(state.food.height):
-            if state.food[x][y]:
-                dist = static_info.floyd_warshall.dist[state.pacman[0]][state.pacman[1]][x][y]
-                if dist < closest_dist:
-                    closest_dist = dist
-                if dist > furthest_dist:
-                    furthest_dist = dist
-
-    count_left = state.food.count()
-    return max(count_left + closest_dist - 1, furthest_dist)
 
 
 class TTEntry:
