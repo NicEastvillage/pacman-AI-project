@@ -8,6 +8,9 @@ from nicolaj.static_info import StaticInfo
 from pacman import GameState
 
 
+GAMMA_INV = 1.0/0.98
+
+
 class TTEntry:
     def __init__(self):
         self.expected_cost = 0
@@ -114,7 +117,7 @@ class PolicyRefiner:
                     ttsucc = TTEntry()
                     self.transposition_table[succ] = ttsucc
                     ttsucc.expected_cost = heuristic(self.static_info, succ)
-                cost += prob * self.transposition_table[succ].expected_cost
+                cost += prob * self.transposition_table[succ].expected_cost * GAMMA_INV
             if cost < tt.expected_cost:
                 tt.best_action = act
                 tt.expected_cost = cost
