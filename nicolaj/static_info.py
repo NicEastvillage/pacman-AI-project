@@ -49,6 +49,7 @@ class StaticInfo:
     def get_ghost_legal_actions(self, position: Tuple[int, int], direction: Tuple[int, int]) -> List[Tuple[int, int]]:
         actions = []
         x, y = position
+        assert not self.layout.walls[x][y]
         for dx, dy in [MyDirection.North, MyDirection.East, MyDirection.West, MyDirection.South]:
             if not self.layout.walls[x + dx][y + dy]:
                 actions.append((dx, dy))

@@ -121,5 +121,5 @@ class PolicyRefiner:
 
     def get_action(self, state: MyGameState) -> Tuple[int, int]:
         tt = self.transposition_table[state]
-        print('Lookup:', tt.best_action, ', expected cost:', tt.expected_cost)
+        print('Lookup:', tt.best_action, 'heuristic:', heuristic(self.static_info, state), 'expected cost:', tt.expected_cost)
         return tt.best_action

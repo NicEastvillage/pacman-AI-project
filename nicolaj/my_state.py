@@ -31,7 +31,7 @@ class MyGameState:
         self.pacman = pacman
         self.ghosts = ghosts
         self.food = food
-        self.ghosts.sort()
+        #self.ghosts.sort()
 
     @staticmethod
     def extract(state: GameState) -> 'MyGameState':

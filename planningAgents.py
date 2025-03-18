@@ -29,7 +29,6 @@ class PlanningAgent(game.Agent):
         stop_at = time.time() + 0.95
         s = MyGameState.extract(state)
 
-        print('Heuristic in this state:', heuristic(self.static_info, s))
         self.policy.root_state = s
         self.policy.refine(stop_at)
 

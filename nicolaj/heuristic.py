@@ -39,6 +39,8 @@ def heuristic(static_info: StaticInfo, state: MyGameState) -> float:
     if state.is_win():
         return 0
 
+    # FIXME: Bug where successor has higher heuristic
+
     pacman_dist = state.food.width * state.food.height
     for x in range(state.food.width):
         for y in range(state.food.height):
