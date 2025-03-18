@@ -11,6 +11,11 @@ class Ghost:
         self.position = position
         self.direction = direction
 
+    def __lt__(self, other):
+        if self.position != other.position:
+            return self.position < other.position
+        return self.direction < other.direction
+
     @staticmethod
     def extract(agent: game.AgentState):
         x, y = agent.getPosition()
@@ -23,6 +28,7 @@ class MyGameState:
         self.pacman = pacman
         self.ghosts = ghosts
         self.food = food
+        self.ghosts.sort()
 
     @staticmethod
     def extract(state: GameState) -> 'MyGameState':
