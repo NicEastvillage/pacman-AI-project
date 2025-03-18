@@ -8,7 +8,7 @@ from nicolaj.static_info import StaticInfo
 from pacman import GameState
 
 
-GAMMA_INV = 1.0/0.98
+GAMMA_INV = 1.0/0.97
 
 
 class TTEntry:
@@ -35,7 +35,7 @@ class PolicyRefiner:
         while time.time() < stop_at:
             s = self.root_state
             trial = [s]
-            explorations_left = max(heuristic(self.static_info, s) * 2, 25)
+            explorations_left = max(heuristic(self.static_info, s) * 2, 99)
             while True:
                 if time.time() >= stop_at:
                     return

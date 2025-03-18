@@ -33,35 +33,34 @@ def find_food_clusters(food: game.Grid):
     return clusters
 
 
+def approach1(x: float) -> float:
+    return x / (x + 1)
+
+
 def heuristic(static_info: StaticInfo, state: MyGameState) -> float:
     if state.is_loss():
         return COST_OF_LOSING
     if state.is_win():
         return 0
 
-    # FIXME: Bug where successor has higher heuristic
-
     pacman_dist = state.food.width * state.food.height
     for x in range(state.food.width):
         for y in range(state.food.height):
             if state.food[x][y]:
-                dist = static_info.floyd_warshall.dist[state.pacman[0]][state.pacman[1]][x][y] - 1
+                dist = static_info.floyd_warshall.dist[state.pacman[0]][state.pacman[1]][x][y]
                 if dist < pacman_dist:
                     pacman_dist = dist
 
     clusters = find_food_clusters(state.food)
 
-    greatest_dist_between = 0
     smallest_dist_between = state.food.width * state.food.height
     for i in range(len(clusters)):
         for j in range(i + 1, len(clusters)):
             for x, y in clusters[i]:
                 for a, b in clusters[j]:
                     dist = static_info.floyd_warshall.dist[x][y][a][b] - 1
-                    if dist > greatest_dist_between:
-                        greatest_dist_between = dist
                     if dist < smallest_dist_between:
                         smallest_dist_between = dist
 
     food_left = state.food.count()
-    return food_left + pacman_dist + max((len(clusters) - 1) * smallest_dist_between, greatest_dist_between)
+    return food_left + approach1(float(pacman_dist)) * int(food_left > 1)

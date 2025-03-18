@@ -31,7 +31,6 @@ class MyGameState:
         self.pacman = pacman
         self.ghosts = ghosts
         self.food = food
-        #self.ghosts.sort()
 
     @staticmethod
     def extract(state: GameState) -> 'MyGameState':
@@ -40,6 +39,10 @@ class MyGameState:
             list(Ghost.extract(g) for g in state.getGhostStates()),
             state.getFood(),
         )
+
+    def normalize(self):
+        # WATCH OUT: Changes hash
+        self.ghosts.sort()
 
     def is_win(self):
         return self.food.count() == 0
@@ -91,6 +94,7 @@ class MyGameState:
                                   probability: float) -> Iterator[Tuple['MyGameState', float]]:
         if ghost_index >= len(self.ghosts):
             # No more ghosts
+            wip_succ.normalize()
             yield wip_succ, probability
         else:
             ghost = self.ghosts[ghost_index]
