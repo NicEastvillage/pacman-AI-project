@@ -1,7 +1,6 @@
 from typing import Tuple, List, Iterator
 
 import game
-import pacman
 from nicolaj.graph import MyDirection
 from nicolaj.static_info import StaticInfo
 from pacman import GameState
@@ -41,8 +40,8 @@ class MyGameState:
             if ghost.position == self.pacman:
                 return True
             dx, dy = ghost.direction
-            if (ghost.position[0] - dx, ghost.position[1] - dy) == pacman:
-                return True  # We may have just walked through the ghost # TODO Improve?
+            if (ghost.position[0] - dx, ghost.position[1] - dy) == self.pacman:
+                return True  # We have just walked into the ghost (ghosts move slightly slower)
         return False
 
     def generate_pacman_successor(self, act: Tuple[int, int]) -> 'MyGameState':

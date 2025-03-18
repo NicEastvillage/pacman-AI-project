@@ -116,7 +116,7 @@ class PolicyRefiner:
                             if succ not in self.transposition_table:
                                 done = False
                                 break
-                            if not self.transposition_table[s].done:
+                            if not self.transposition_table[succ].done:
                                 done = False
                                 break
                 tt.done = done
@@ -135,7 +135,7 @@ class PolicyRefiner:
                     ttsucc = TTEntry()
                     self.transposition_table[succ] = ttsucc
                     ttsucc.expected_cost = heuristic(self.static_info, succ)
-                cost += prob * self.transposition_table[succ].expected_cost * 1.02
+                cost += prob * self.transposition_table[succ].expected_cost
             if cost < tt.expected_cost:
                 tt.best_action = act
                 tt.expected_cost = cost

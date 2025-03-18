@@ -11,7 +11,7 @@ class MyDirection:
     opposite = {
         North: South,
         East: West,
-        West: South,
+        West: East,
         South: North,
         Stop: Stop,
     }
