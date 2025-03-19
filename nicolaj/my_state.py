@@ -1,7 +1,7 @@
 from typing import Tuple, List, Iterator
 
 import game
-from nicolaj.graph import MyDirection
+from nicolaj.direction import MyDirection
 from pacman import GameState
 
 COST_OF_LOSING = 999999

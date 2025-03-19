@@ -5,7 +5,6 @@ from typing import Dict, Tuple, List
 import game
 from nicolaj.heuristic import heuristic
 from nicolaj.my_state import MyGameState, COST_OF_LOSING
-from pacman import GameState
 
 
 GAMMA_INV = 1.0/0.97
@@ -33,10 +32,10 @@ class PolicyRefiner:
         while time.time() < stop_at:
             s = self.root_state
             trial = [s]
-            explorations_left = 30
+            explorations_left = 10
             while True:
-                if time.time() >= stop_at:
-                    return
+                if time.time() + 0.01 >= stop_at:
+                    break # +0.01 so we have time to learn from this last trial
 
                 tt = self.transposition_table.setdefault(s, TTEntry())
 
