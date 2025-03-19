@@ -2,9 +2,9 @@ import random
 import time
 from typing import Dict, Tuple, List
 
+import game
 from nicolaj.heuristic import heuristic
 from nicolaj.my_state import MyGameState, COST_OF_LOSING
-from nicolaj.static_info import StaticInfo
 from pacman import GameState
 
 
@@ -21,11 +21,9 @@ class TTEntry:
 
 
 class PolicyRefiner:
-    def __init__(self, static_info: StaticInfo):
-        self.static_info = static_info
-        s = GameState()
-        s.initialize(static_info.layout)
-        self.root_state: MyGameState = MyGameState.extract(s)
+    def __init__(self, walls: game.Grid, root_state: MyGameState):
+        self.walls = walls
+        self.root_state = root_state
         self.transposition_table = {}
         self.trials_completed = 0
 
@@ -63,7 +61,7 @@ class PolicyRefiner:
 
                 # Explore if needed
                 if not tt.explored:
-                    tt.successors = {act: list(outs) for act, outs in s.generate_successors_map(self.static_info)}
+                    tt.successors = {act: list(outs) for act, outs in s.generate_successors_map(self.walls)}
                     tt.explored = True
                     explorations_left -= 1
 
@@ -116,7 +114,7 @@ class PolicyRefiner:
                 if succ not in self.transposition_table:
                     ttsucc = TTEntry()
                     self.transposition_table[succ] = ttsucc
-                    ttsucc.expected_cost = heuristic(self.static_info, succ)
+                    ttsucc.expected_cost = heuristic(self.walls, succ)
                 cost += prob * self.transposition_table[succ].expected_cost * GAMMA_INV
             if cost < tt.expected_cost:
                 tt.best_action = act
@@ -124,5 +122,5 @@ class PolicyRefiner:
 
     def get_action(self, state: MyGameState) -> Tuple[int, int]:
         tt = self.transposition_table[state]
-        print('Lookup:', tt.best_action, 'heuristic:', heuristic(self.static_info, state), 'expected cost:', tt.expected_cost)
+        print('Lookup:', tt.best_action, 'heuristic:', heuristic(self.walls, state), 'expected cost:', tt.expected_cost)
         return tt.best_action

@@ -2,9 +2,7 @@ from typing import Tuple, List, Iterator
 
 import game
 from nicolaj.graph import MyDirection
-from nicolaj.static_info import StaticInfo
 from pacman import GameState
-
 
 COST_OF_LOSING = 999999
 
@@ -71,7 +69,7 @@ class MyGameState:
         new_ghost_list[ghost_index] = Ghost(new_position, act)
         return MyGameState(self.pacman, new_ghost_list, self.food)
 
-    def generate_successors_map(self, static_info: StaticInfo) -> Iterator[
+    def generate_successors_map(self, walls: game.Grid) -> Iterator[
         Tuple[Tuple[int, int], Iterator[Tuple['MyGameState', float]]]]:
         if self.is_loss() or self.is_win():
             return
@@ -83,14 +81,13 @@ class MyGameState:
                 ignore_stop_act = False
                 break
 
-
-        for act in static_info.get_all_legal_actions(self.pacman):
+        for act in get_all_legal_actions(walls, self.pacman):
             if act == (0, 0) and ignore_stop_act:
                 continue
             wip_succ = self.generate_pacman_successor(act)
-            yield act, self._generate_ghost_responses(static_info, 0, wip_succ, 1.0)
+            yield act, self._generate_ghost_responses(walls, 0, wip_succ, 1.0)
 
-    def _generate_ghost_responses(self, static_info: StaticInfo, ghost_index: int, wip_succ: 'MyGameState',
+    def _generate_ghost_responses(self, walls: game.Grid, ghost_index: int, wip_succ: 'MyGameState',
                                   probability: float) -> Iterator[Tuple['MyGameState', float]]:
         if ghost_index >= len(self.ghosts):
             # No more ghosts
@@ -98,8 +95,30 @@ class MyGameState:
             yield wip_succ, probability
         else:
             ghost = self.ghosts[ghost_index]
-            actions = static_info.get_ghost_legal_actions(ghost.position, ghost.direction)
+            actions = get_ghost_legal_actions(walls, ghost.position, ghost.direction)
             for act in actions:
                 next_succ = wip_succ.generate_ghost_successor(ghost_index, act)
-                yield from self._generate_ghost_responses(static_info, ghost_index + 1, next_succ,
+                yield from self._generate_ghost_responses(walls, ghost_index + 1, next_succ,
                                                           probability / len(actions))
+
+
+def get_all_legal_actions(walls: game.Grid, position: Tuple[int, int]) -> Iterator[Tuple[int, int]]:
+    x, y = position
+    for dx, dy in [MyDirection.North, MyDirection.East, MyDirection.West, MyDirection.South, (0, 0)]:
+        if not walls[x + dx][y + dy]:
+            yield dx, dy
+
+
+def get_ghost_legal_actions(walls: game.Grid, position: Tuple[int, int], direction: Tuple[int, int]) -> List[
+    Tuple[int, int]]:
+    actions = []
+    x, y = position
+    assert not walls[x][y]
+    for dx, dy in [MyDirection.North, MyDirection.East, MyDirection.West, MyDirection.South]:
+        if not walls[x + dx][y + dy]:
+            actions.append((dx, dy))
+    if len(actions) > 1 and MyDirection.opposite[direction] in actions:
+        actions.remove(MyDirection.opposite[direction])
+    elif len(actions) == 0:
+        actions.append((0, 0))
+    return actions

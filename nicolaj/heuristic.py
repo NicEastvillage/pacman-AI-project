@@ -4,7 +4,6 @@ from typing import Tuple
 
 import game
 from nicolaj.my_state import COST_OF_LOSING, MyGameState
-from nicolaj.static_info import StaticInfo
 
 
 @cache
@@ -64,10 +63,10 @@ def visit_food_mst_size(walls: game.Grid, food: game.Grid, pacman: Tuple[int, in
     return mst_cost
 
 
-def heuristic(static_info: StaticInfo, state: MyGameState) -> float:
+def heuristic(walls: game.Grid, state: MyGameState) -> float:
     if state.is_loss():
         return COST_OF_LOSING
     if state.is_win():
         return 0
 
-    return visit_food_mst_size(static_info.layout.walls, state.food, state.pacman)
+    return visit_food_mst_size(walls, state.food, state.pacman)

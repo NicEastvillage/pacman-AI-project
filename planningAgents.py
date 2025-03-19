@@ -5,7 +5,6 @@ from layout import Layout
 from nicolaj.graph import MyDirection
 from nicolaj.my_state import MyGameState
 from nicolaj.rldp import PolicyRefiner, heuristic
-from nicolaj.static_info import StaticInfo
 from pacman import GameState
 
 
@@ -14,14 +13,20 @@ class PlanningAgent(game.Agent):
     def __init__(self, layout: Layout, **kwargs):
         super().__init__(**kwargs)
         self.layout: Layout = layout
-        self.static_info: StaticInfo = StaticInfo(layout)
-        self.policy = PolicyRefiner(self.static_info)
+        self.walls = layout.walls
+        ss = GameState()
+        ss.initialize(layout)
+        self.start_state = MyGameState.extract(ss)
+        self.policy = PolicyRefiner(self.walls, self.start_state)
         self.offline_planning()
 
     def offline_planning(self):
         # Time limit: 10 minutes
 
-        stop_at = time.time() + 20  # TODO: Extend to 10 min
+        stop_at = time.time() + 60  # TODO: Extend to 10 min
+        print('Warming up caches...')
+        heuristic(self.walls, self.start_state)
+
         self.policy.refine(stop_at)
 
     def getAction(self, state: GameState):
