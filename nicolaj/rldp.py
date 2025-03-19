@@ -35,7 +35,7 @@ class PolicyRefiner:
         while time.time() < stop_at:
             s = self.root_state
             trial = [s]
-            explorations_left = max(heuristic(self.static_info, s) * 2, 99)
+            explorations_left = 30
             while True:
                 if time.time() >= stop_at:
                     return

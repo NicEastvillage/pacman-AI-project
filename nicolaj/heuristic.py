@@ -1,40 +1,67 @@
+import heapq
+from functools import cache
+from typing import Tuple
+
 import game
 from nicolaj.my_state import COST_OF_LOSING, MyGameState
 from nicolaj.static_info import StaticInfo
 
 
-def find_food_clusters(food: game.Grid):
-    width, height = food.width, food.height
-    marked = game.Grid(width, height)  # Visited cells
-    clusters = []
+@cache
+def distance(walls: game.Grid, source: Tuple[int, int], destination: Tuple[int, int]) -> int:
+    # Djikstra's algorithm
 
-    def flood_fill(x, y, cluster):
-        stack = [(x, y)]
-        while stack:
-            cx, cy = stack.pop()
-            if not (0 <= cx < width and 0 <= cy < height):
-                continue
-            if marked[cx][cy] or not food[cx][cy]:
-                continue
+    width, height = walls.width, walls.height
+    ax, ay = source
+    bx, by = destination
 
-            marked[cx][cy] = True
-            cluster.append((cx, cy))
+    assert not walls[ax][ay] and not walls[bx][by]
 
-            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                stack.append((cx + dx, cy + dy))
+    priority_queue = [(0, ax, ay)]  # (cost, x, y)
+    visited = set()
 
-    for x in range(width):
-        for y in range(height):
-            if food[x][y] and not marked[x][y]:
-                cluster = []
-                flood_fill(x, y, cluster)
-                clusters.append(cluster)
+    while priority_queue:
+        cost, x, y = heapq.heappop(priority_queue)
 
-    return clusters
+        if (x, y) in visited:
+            continue
+        visited.add((x, y))
+
+        if (x, y) == (bx, by):
+            return cost
+
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < width and 0 <= ny < height and not walls[nx][ny]:
+                heapq.heappush(priority_queue, (cost + 1, nx, ny))
+
+    assert False
 
 
-def approach1(x: float) -> float:
-    return x / (x + 1)
+@cache
+def visit_food_mst_size(walls: game.Grid, food: game.Grid, pacman: Tuple[int, int]) -> int:
+    # NOTE: The size is off-by-minus-one depending on how you understand size of mst
+    positions = [(x, y) for x in range(food.width) for y in range(food.height) if food[x][y]] + [pacman]
+
+    # Prim's algorithm
+    mst_cost = 0
+    visited = set()
+    pq = [(0, pacman[0], pacman[1])]  # (cost, x, y)
+
+    while pq and len(visited) < len(positions):
+        cost, x, y = heapq.heappop(pq)
+
+        if (x, y) in visited:
+            continue
+        visited.add((x, y))
+        mst_cost += cost
+
+        for nx, ny in positions:
+            if (nx, ny) not in visited:
+                d = distance(walls, (x, y), (nx, ny))
+                heapq.heappush(pq, (d, nx, ny))
+
+    return mst_cost
 
 
 def heuristic(static_info: StaticInfo, state: MyGameState) -> float:
@@ -43,24 +70,4 @@ def heuristic(static_info: StaticInfo, state: MyGameState) -> float:
     if state.is_win():
         return 0
 
-    pacman_dist = state.food.width * state.food.height
-    for x in range(state.food.width):
-        for y in range(state.food.height):
-            if state.food[x][y]:
-                dist = static_info.floyd_warshall.dist[state.pacman[0]][state.pacman[1]][x][y]
-                if dist < pacman_dist:
-                    pacman_dist = dist
-
-    clusters = find_food_clusters(state.food)
-
-    smallest_dist_between = state.food.width * state.food.height
-    for i in range(len(clusters)):
-        for j in range(i + 1, len(clusters)):
-            for x, y in clusters[i]:
-                for a, b in clusters[j]:
-                    dist = static_info.floyd_warshall.dist[x][y][a][b] - 1
-                    if dist < smallest_dist_between:
-                        smallest_dist_between = dist
-
-    food_left = state.food.count()
-    return food_left + approach1(float(pacman_dist)) * int(food_left > 1)
+    return visit_food_mst_size(static_info.layout.walls, state.food, state.pacman)
