@@ -27,7 +27,7 @@ class PlanningAgent(game.Agent):
     def offline_planning(self):
         # Time limit: 10 minutes
 
-        stop_at = time.time() + 60  # TODO: Extend to 10 min
+        stop_at = time.time() + 59.5 * 10  # TODO: Extend to 10 min
         print('Food on this layout:', self.start_state.food.count())
         self.policy.refine(stop_at)
         print('Offline planning over!')

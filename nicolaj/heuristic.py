@@ -11,12 +11,12 @@ def distance(walls: game.Grid, source: Tuple[int, int], destination: Tuple[int, 
     # Djikstra's algorithm
 
     width, height = walls.width, walls.height
-    ax, ay = source
-    bx, by = destination
+    start_x, start_y = source
+    end_x, end_y = destination
 
-    assert not walls[ax][ay] and not walls[bx][by]
+    assert not walls[start_x][start_y] and not walls[end_x][end_y]
 
-    queue = [(0, ax, ay)]  # (cost, x, y) - not a priority queue since all edge have cost 1
+    queue = [(0, start_x, start_y)]  # (cost, x, y) - not a priority queue since all edge have cost 1
     visited = set()
 
     while queue:
@@ -26,7 +26,7 @@ def distance(walls: game.Grid, source: Tuple[int, int], destination: Tuple[int, 
             continue
         visited.add((x, y))
 
-        if (x, y) == (bx, by):
+        if (x, y) == (end_x, end_y):
             return cost
 
         for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
