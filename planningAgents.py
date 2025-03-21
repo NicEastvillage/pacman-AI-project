@@ -27,10 +27,10 @@ class PlanningAgent(game.Agent):
     def offline_planning(self):
         # Time limit: 10 minutes
 
-        stop_at = time.time() + 59.5 * 10  # TODO: Extend to 10 min
+        stop_at = time.time() + 3.5 * 10  # TODO: Extend to 10 min
         print('Food on this layout:', self.start_state.food.count())
         self.policy.refine(stop_at)
-        print('Offline planning over!')
+        print('Offline planning over! Trials:', self.policy.trials_completed)
 
     def getAction(self, state: GameState):
         # Time limit: approx 1 second
@@ -43,7 +43,7 @@ class PlanningAgent(game.Agent):
         naive, food, dist = self.do_naive(s)
 
         if naive:
-            print(f'Policy likely underdeveloped - using naive strategy while tons of food left ({food}) and no danger nearby (dist {dist})')
+            print(f'Policy likely underdeveloped ({self.policy.trials_completed} trials) - using naive strategy while tons of food left ({food}) and no danger nearby (dist {dist})')
             act = get_naive_action(self.walls, s)
             print('Naive:', act)
             self.policy.refine(stop_at)

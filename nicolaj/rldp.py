@@ -35,7 +35,7 @@ class PolicyRefiner:
             explorations_left = 10
             while True:
                 if time.time() + 0.01 >= stop_at:
-                    break # +0.01 so we have time to learn from this last trial
+                    break  # +0.01 so we have time to learn from this last trial
 
                 tt = self.transposition_table.setdefault(s, TTEntry())
 
