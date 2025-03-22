@@ -54,6 +54,14 @@ class Graph:
         self.edges.append(e)
         return e
 
+    def deep_copy(self):
+        new_graph = Graph()
+        for n in self.nodes:
+            new_graph.add_node(n.x, n.y)
+        for e in self.edges:
+            new_graph.add_edge(e.i, e.j, e.weight)
+        return new_graph
+
     def pretty_str(self):
         s = f'Nodes ({len(self.nodes)}):\n'
         for n in self.nodes:

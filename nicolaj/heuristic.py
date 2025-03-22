@@ -4,7 +4,7 @@ from typing import Tuple
 
 import game
 from nicolaj.graph import Graph
-from nicolaj.my_state import COST_OF_LOSING, MyGameState
+from nicolaj.my_state import COST_OF_LOSING, MyGameState, Ghost
 
 
 @cache
@@ -51,14 +51,28 @@ def dist_to_closest_food(point: Tuple[int, int], walls: game.Grid, food: game.Gr
     return closest_food_dist
 
 
+def dist_to_closest_ghost(state: MyGameState, walls: game.Grid) -> Tuple[Ghost, int]:
+    nearest_ghost = None
+    nearest_ghost_dist = 0
+    for ghost in state.ghosts:
+        dist = distance(walls, state.pacman, ghost.position)
+        if nearest_ghost is None or dist < nearest_ghost_dist:
+            nearest_ghost_dist = dist
+            nearest_ghost = ghost
+    return nearest_ghost, nearest_ghost_dist
+
+
 @cache
 def food_mst_size(walls: game.Grid, food: game.Grid) -> int:
     # NOTE: The size is off-by-minus-one depending on how you understand size of mst
 
     if hasattr(food_mst_size, '_prev_food'):
         # Often the input will be very similar to the last input
+        # Here we try to take advantage of that and compute the new MST faster
         prev_food = food_mst_size._prev_food
         prev_graph = food_mst_size._prev_graph
+
+        # Is there only one food difference?
         diffx, diffy = 0, 0
         diff_count = 0
         for x in range(food.width):
@@ -69,7 +83,7 @@ def food_mst_size(walls: game.Grid, food: game.Grid) -> int:
                     if diff_count > 1:
                         break
                     if food[x][y]:
-                        # New food grid has more food - we have no tricks here
+                        # New food grid has more food - we have no tricks here (yet?)
                         diff_count = 2
                         break
                     diffx, diffy = x, y
@@ -80,7 +94,7 @@ def food_mst_size(walls: game.Grid, food: game.Grid) -> int:
             for node in graph.nodes:
                 if node.x == diffx and node.y == diffy:
                     if len(node.edges) == 1:
-                        # This is a leaf node, so we can easily find new cost!
+                        # Removed food is a leaf node, so we still have an MST when we remove it!
                         mst_cost = food_mst_size._prev_cost - node.edges[0].weight
                         graph.remove_node(node.index)
                         food_mst_size._prev_food = food
@@ -88,8 +102,9 @@ def food_mst_size(walls: game.Grid, food: game.Grid) -> int:
                         food_mst_size._prev_graph = graph
                         return mst_cost
                     else:
-                        # This is not a leaf node, removing it will create disconnected trees,
-                        # but the minimum edges that connects the trees again creates the new spanning tree
+                        # Removed food is not a leaf node. Removing the node will create disconnected trees,
+                        # but the minimum edges that connects the trees again creates the new spanning tree.
+                        # Disconnect trees
                         mst_cost = food_mst_size._prev_cost
                         tree_roots = []
                         for edge in node.edges:
@@ -137,13 +152,13 @@ def food_mst_size(walls: game.Grid, food: game.Grid) -> int:
                         food_mst_size._prev_graph = graph
                         return mst_cost
 
+    # Prim's algorithm
     graph = Graph()
     for x in range(walls.width):
         for y in range(walls.height):
             if food[x][y]:
                 graph.add_node(x, y)
 
-    # Prim's algorithm
     mst_cost = 0
     visited = set()
     pq = [(0, graph.nodes[0], None)]  # (cost, node, anchor node)

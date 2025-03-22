@@ -1,8 +1,10 @@
+from typing import Tuple
+
 import game
 from nicolaj.my_state import MyGameState
 
 
-def get_naive_action(walls: game.Grid, state: MyGameState):
+def get_naive_action(walls: game.Grid, state: MyGameState) -> Tuple[int, int]:
     # Djikstra's algorithm to find nearest food
 
     width, height = walls.width, walls.height

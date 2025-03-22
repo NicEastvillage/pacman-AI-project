@@ -12,6 +12,7 @@ GAMMA_INV = 1.0/0.97
 
 class TTEntry:
     def __init__(self):
+        self.heuristic_cost = 0
         self.expected_cost = 0
         self.explored = False
         self.successors: Dict[Tuple[int, int], List[Tuple[MyGameState, float]]] = {}
@@ -26,9 +27,10 @@ class PolicyRefiner:
         self.transposition_table = {}
         self.trials_completed = 0
 
-    def refine(self, stop_at: float):
+    def refine(self, stop_at: float, report_regularly: bool = False):
         # Labelled RTDP
-        print('Refining policy (LRTDP)...')
+        print('Refining policy (L-RTDP)...')
+        report_at = time.time() + 20 if report_regularly else stop_at + 10000
         while time.time() < stop_at:
             s = self.root_state
             trial = [s]
@@ -41,7 +43,7 @@ class PolicyRefiner:
 
                 # Should trial stop in this state?
                 if tt.done and s == self.root_state:
-                    print('Root is done!')
+                    print('... Root is done!')
                     return
                 if s.is_loss():
                     tt.expected_cost = COST_OF_LOSING
@@ -101,8 +103,9 @@ class PolicyRefiner:
                 tt.done = done
 
             self.trials_completed += 1
-            if self.trials_completed % 1000 == 0:
-                print('Trials completed:', self.trials_completed)
+            if time.time() >= report_at:
+                print('...Trials:', self.trials_completed, '...')
+                report_at += 20
 
     def _update_best_action(self, tt: TTEntry):
         tt.best_action = (0, 0)
@@ -113,13 +116,13 @@ class PolicyRefiner:
                 if succ not in self.transposition_table:
                     ttsucc = TTEntry()
                     self.transposition_table[succ] = ttsucc
-                    ttsucc.expected_cost = heuristic(self.walls, succ)
+                    ttsucc.heuristic_cost = heuristic(self.walls, succ)
+                    ttsucc.expected_cost = ttsucc.heuristic_cost
                 cost += prob * self.transposition_table[succ].expected_cost * GAMMA_INV
             if cost < tt.expected_cost:
                 tt.best_action = act
                 tt.expected_cost = cost
 
-    def get_action(self, state: MyGameState) -> Tuple[int, int]:
+    def get_action(self, state: MyGameState) -> Tuple[Tuple[int, int], float]:
         tt = self.transposition_table[state]
-        print('Lookup:', tt.best_action, 'heuristic:', heuristic(self.walls, state), 'expected cost:', tt.expected_cost)
-        return tt.best_action
+        return tt.best_action, tt.expected_cost

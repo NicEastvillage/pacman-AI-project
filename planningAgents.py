@@ -4,7 +4,7 @@ from typing import Tuple
 import game
 from layout import Layout
 from nicolaj.direction import MyDirection
-from nicolaj.heuristic import distance
+from nicolaj.heuristic import distance, dist_to_closest_ghost
 from nicolaj.my_state import MyGameState
 from nicolaj.naive import get_naive_action
 from nicolaj.rldp import PolicyRefiner, heuristic
@@ -27,10 +27,13 @@ class PlanningAgent(game.Agent):
     def offline_planning(self):
         # Time limit: 10 minutes
 
-        stop_at = time.time() + 3.5 * 10  # TODO: Extend to 10 min
-        print('Food on this layout:', self.start_state.food.count())
-        self.policy.refine(stop_at)
-        print('Offline planning over! Trials:', self.policy.trials_completed)
+        stop_at = time.time() + 6.5 * 10  # TODO: Extend to 10 min
+        print('Size:', self.walls.width, 'x', self.walls.height)
+        print('Food:', self.start_state.food.count())
+        print('Ghosts:', len(self.start_state.ghosts))
+        self.policy.refine(stop_at, True)
+        print('Trials:', self.policy.trials_completed)
+        print('Offline planning over!')
 
     def getAction(self, state: GameState):
         # Time limit: approx 1 second
@@ -40,32 +43,26 @@ class PlanningAgent(game.Agent):
         print('===== STEP ', self.steps, ' =====')
         s = MyGameState.extract(state)
         self.policy.root_state = s
-        naive, food, dist = self.do_naive(s)
+
+        food_count = s.food.count()
+        ghost, ghost_dist = dist_to_closest_ghost(s, self.walls)
+        naive = food_count > 90 and ghost_dist > 8
 
         if naive:
-            print(f'Policy likely underdeveloped ({self.policy.trials_completed} trials) - using naive strategy while tons of food left ({food}) and no danger nearby (dist {dist})')
-            act = get_naive_action(self.walls, s)
-            print('Naive:', act)
-            self.policy.refine(stop_at)
-            return MyDirection.toStr[act]
+            direction = get_naive_action(self.walls, s)
+            expect_cost = '???'
 
         self.policy.refine(stop_at)
-        act = MyDirection.toStr[self.policy.get_action(s)]
+        if not naive:
+            direction, expect_cost = self.policy.get_action(s)
+        else:
+            print('! Feeling overwhelmed, but safe; Choosing action naively !')
+
+        act = MyDirection.toStr[direction]
+        print('Food:', food_count)
+        print('Ghost dist:', ghost_dist)
+        print('Heuristic:', self.policy.transposition_table[s].heuristic_cost)
+        print('Trials:', self.policy.trials_completed)
+        print('Action:', direction)
+        print('Succ expected cost:', expect_cost)
         return act
-
-    def do_naive(self, state: MyGameState) -> Tuple[bool, int, int]:
-        if state.food.count() <= 100:
-            return False, 0, 0
-
-        nearest_ghost = None
-        nearest_ghost_dist = 0
-        for ghost in state.ghosts:
-            dist = distance(self.walls, state.pacman, ghost.position)
-            if nearest_ghost is None or dist < nearest_ghost_dist:
-                nearest_ghost_dist = dist
-                nearest_ghost = ghost
-
-        if nearest_ghost_dist <= 8:
-            return False, 0, 0
-
-        return True, state.food.count(), nearest_ghost_dist
