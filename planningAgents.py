@@ -4,10 +4,10 @@ from typing import Tuple
 import game
 from layout import Layout
 from nicolaj.direction import MyDirection
-from nicolaj.heuristic import distance, dist_to_closest_ghost
+from nicolaj.heuristic import Distances, Heuristic, dist_to_closest_ghost
 from nicolaj.my_state import MyGameState
 from nicolaj.naive import get_naive_action
-from nicolaj.rldp import PolicyRefiner, heuristic
+from nicolaj.rldp import PolicyRefiner
 from pacman import GameState
 
 
@@ -17,11 +17,13 @@ class PlanningAgent(game.Agent):
         super().__init__(**kwargs)
         self.layout: Layout = layout
         self.walls = layout.walls
+        self.distances = Distances(self.walls)
+        self.heuristic = Heuristic(self.distances)
         self.steps = 0
         ss = GameState()
         ss.initialize(layout)
         self.start_state = MyGameState.extract(ss)
-        self.policy = PolicyRefiner(self.walls, self.start_state)
+        self.policy = PolicyRefiner(self.heuristic, self.walls, self.start_state)
         self.offline_planning()
 
     def offline_planning(self):
@@ -45,8 +47,8 @@ class PlanningAgent(game.Agent):
         self.policy.root_state = s
 
         food_count = s.food.count()
-        ghost, ghost_dist = dist_to_closest_ghost(s, self.walls)
-        naive = food_count > 90 and ghost_dist > 8
+        ghost_dist = dist_to_closest_ghost(self.distances, s)
+        naive = food_count > 90 and ghost_dist > 8 and False
 
         if naive:
             direction = get_naive_action(self.walls, s)
@@ -61,8 +63,8 @@ class PlanningAgent(game.Agent):
         act = MyDirection.toStr[direction]
         print('Food:', food_count)
         print('Ghost dist:', ghost_dist)
-        print('Heuristic:', self.policy.transposition_table[s].heuristic_cost)
+        print('Heuristic:', self.heuristic.get(s, None))
         print('Trials:', self.policy.trials_completed)
         print('Action:', direction)
-        print('Succ expected cost:', expect_cost)
+        print('Action expected cost:', expect_cost)
         return act

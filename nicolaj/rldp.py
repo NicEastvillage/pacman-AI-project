@@ -3,7 +3,7 @@ import time
 from typing import Dict, Tuple, List
 
 import game
-from nicolaj.heuristic import heuristic
+from nicolaj.heuristic import Heuristic
 from nicolaj.my_state import MyGameState, COST_OF_LOSING
 
 
@@ -21,7 +21,8 @@ class TTEntry:
 
 
 class PolicyRefiner:
-    def __init__(self, walls: game.Grid, root_state: MyGameState):
+    def __init__(self, heuristic: Heuristic, walls: game.Grid, root_state: MyGameState):
+        self.heuristic = heuristic
         self.walls = walls
         self.root_state = root_state
         self.transposition_table = {}
@@ -67,7 +68,7 @@ class PolicyRefiner:
                     explorations_left -= 1
 
                 # Update expected cost and best action
-                self._update_best_action(tt)
+                self._update_best_action(s, tt)
 
                 # Sample best action successor to get next state - but don't visit done states
                 sum_prob = 0
@@ -91,7 +92,7 @@ class PolicyRefiner:
                 done = True
                 tt = self.transposition_table[s]
                 if not s.is_loss() and not s.is_win():
-                    self._update_best_action(tt)
+                    self._update_best_action(s, tt)
                     if len(tt.successors) != 0:  # Terminal states have no successors
                         for succ, prob in tt.successors[tt.best_action]:
                             if succ not in self.transposition_table:
@@ -107,7 +108,7 @@ class PolicyRefiner:
                 print('...Trials:', self.trials_completed, '...')
                 report_at += 20
 
-    def _update_best_action(self, tt: TTEntry):
+    def _update_best_action(self, state: MyGameState, tt: TTEntry):
         tt.best_action = (0, 0)
         tt.expected_cost = COST_OF_LOSING + 1
         for act, outs in tt.successors.items():
@@ -116,7 +117,7 @@ class PolicyRefiner:
                 if succ not in self.transposition_table:
                     ttsucc = TTEntry()
                     self.transposition_table[succ] = ttsucc
-                    ttsucc.heuristic_cost = heuristic(self.walls, succ)
+                    ttsucc.heuristic_cost = self.heuristic.get(succ, state)
                     ttsucc.expected_cost = ttsucc.heuristic_cost
                 cost += prob * self.transposition_table[succ].expected_cost * GAMMA_INV
             if cost < tt.expected_cost:
