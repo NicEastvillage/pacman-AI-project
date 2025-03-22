@@ -207,10 +207,6 @@ class Heuristic:
         self.mst_cache[food] = (graph, mst_cost)
         return mst_cost
 
-    def forget_mst(self, state: MyGameState):
-        # Reduces memory usage and time spent reallocating
-        del self.mst_cache[state.food]
-
 
 def dist_to_closest_ghost(distances: Distances, state: MyGameState) -> int:
     nearest_ghost_dist = 999999999999

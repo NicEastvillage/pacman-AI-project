@@ -1,12 +1,10 @@
 import time
-from typing import Tuple
 
 import game
 from layout import Layout
 from nicolaj.direction import MyDirection
 from nicolaj.heuristic import Distances, Heuristic, dist_to_closest_ghost
 from nicolaj.my_state import MyGameState
-from nicolaj.naive import get_naive_action
 from nicolaj.rldp import PolicyRefiner
 from pacman import GameState
 
@@ -29,7 +27,7 @@ class PlanningAgent(game.Agent):
     def offline_planning(self):
         # Time limit: 10 minutes
 
-        stop_at = time.time() + 6.5 * 10  # TODO: Extend to 10 min
+        stop_at = time.time() + 9.9 * 60
         print('Size:', self.walls.width, 'x', self.walls.height)
         print('Food:', self.start_state.food.count())
         print('Ghosts:', len(self.start_state.ghosts))
@@ -46,23 +44,12 @@ class PlanningAgent(game.Agent):
         s = MyGameState.extract(state)
         self.policy.root_state = s
 
-        food_count = s.food.count()
-        ghost_dist = dist_to_closest_ghost(self.distances, s)
-        naive = food_count > 90 and ghost_dist > 8 and False
-
-        if naive:
-            direction = get_naive_action(self.walls, s)
-            expect_cost = '???'
-
         self.policy.refine(stop_at)
-        if not naive:
-            direction, expect_cost = self.policy.get_action(s)
-        else:
-            print('! Feeling overwhelmed, but safe; Choosing action naively !')
+        direction, expect_cost = self.policy.get_action(s)
 
         act = MyDirection.toStr[direction]
-        print('Food:', food_count)
-        print('Ghost dist:', ghost_dist)
+        print('Food:', s.food.count())
+        print('Ghost dist:', dist_to_closest_ghost(self.distances, s))
         print('Heuristic:', self.heuristic.get(s, None))
         print('Trials:', self.policy.trials_completed)
         print('Action:', direction)
