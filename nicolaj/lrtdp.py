@@ -6,8 +6,7 @@ import game
 from nicolaj.heuristic import Heuristic
 from nicolaj.my_state import MyGameState, COST_OF_LOSING
 
-
-GAMMA_INV = 1.0/0.97
+GAMMA_INV = 1.0 / 0.97
 
 
 class TTEntry:

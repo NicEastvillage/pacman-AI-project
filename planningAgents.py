@@ -4,8 +4,8 @@ import game
 from layout import Layout
 from nicolaj.direction import MyDirection
 from nicolaj.heuristic import Distances, Heuristic, dist_to_closest_ghost
+from nicolaj.lrtdp import PolicyRefiner
 from nicolaj.my_state import MyGameState
-from nicolaj.rldp import PolicyRefiner
 from pacman import GameState
 
 

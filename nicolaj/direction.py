@@ -1,4 +1,3 @@
-
 class MyDirection:
     North = (0, 1)
     East = (1, 0)

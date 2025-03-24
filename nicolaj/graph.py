@@ -1,4 +1,3 @@
-
 class Edge:
     def __init__(self, i, j, weight):
         self.i = i
